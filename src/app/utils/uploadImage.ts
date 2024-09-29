@@ -5,20 +5,22 @@ import path from 'path';
 import AppError from '../error/AppError';
 import httpStatus from 'http-status';
 
-export const uploadImage = async (file: fileUpload.FileArray) => {
+export const uploadImage = async (files: fileUpload.FileArray) => {
+
   const parser = new DataURIParser();
 
   try {
-    const fileInfos = Object.values(file) as fileUpload.UploadedFile[];
-
-    const fileAsync = fileInfos.map(async (file) => {
+    const fileInfos = Object.values(files)[0] as fileUpload.UploadedFile[];
+    const fileArray  = Array.isArray(fileInfos) ? fileInfos : [fileInfos]
+    
+    const fileAsync = fileArray.map(async (file) => {
       const file64 = parser.format(
         path.extname(file.name).toString(),
         file.data,
       ).content as string;
       const uploadResponse = await cloudinary.uploader.upload(file64, {
         upload_preset: 'kiq7tq73',
-        folder: 'car-washing',
+        folder: 'triporio',
       });
       return uploadResponse;
     });

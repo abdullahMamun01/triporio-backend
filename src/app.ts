@@ -9,10 +9,11 @@ import fileUpload from 'express-fileupload'
 
 const app: Application = express();
 
-//parsers
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors());
+//middleware for file upload
 app.use(fileUpload())
 app.use(handleEmptyResponse);
 

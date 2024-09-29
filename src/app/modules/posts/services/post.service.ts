@@ -3,26 +3,32 @@ import AppError from '../../../error/AppError';
 import UserModel from '../../user/user.model';
 import TPost from '../interface/post.interface';
 import PostModel from '../model/post.model';
+import { findUser } from '../../user/user.utils';
 
 const allPost = async () => {
   const posts = await PostModel.find({});
   return posts;
 };
 
-const userPosts = async (userId:string) => {
-    const posts = await PostModel.find({userId});
-    return posts;
-  };
+const userPosts = async (userId: string) => {
+  const posts = await PostModel.find({ userId });
+  return posts;
+};
 
-const createPost = async (payload: TPost) => {
-  const user = await UserModel.findById(payload.userId);
-  if (!user) {
+const singlePost = async (postId: string, userId: string) => {
+  const user = await findUser(userId);
+  const post = await PostModel.findById(postId);
+  if (post?.premium && user?.role === 'user' && !user?.isVerified) {
     throw new AppError(
-      httpStatus.NOT_FOUND,
-      'User not found. Please ensure that the user ID is correct and that the user exists in the system.',
+      httpStatus.FORBIDDEN,
+      'Access denied. You must verify your account to view premium posts.',
     );
   }
+  return post;
+};
 
+const createPost = async (payload: TPost) => {
+  await findUser(payload.userId.toString());
   const post = await PostModel.create(payload);
   return post;
 };
@@ -58,9 +64,8 @@ const deletPost = async (postId: string) => {
       `Post with ID ${postId} not found. Please check that the post ID is correct and that the post exists.`,
     );
   }
-  const deletPost = await PostModel.findByIdAndDelete(postId )
-  return deletPost
-
+  const deletPost = await PostModel.findByIdAndDelete(postId);
+  return deletPost;
 };
 
 export const PostService = {
@@ -69,4 +74,5 @@ export const PostService = {
   createPost,
   updatePost,
   deletPost,
+  singlePost,
 };

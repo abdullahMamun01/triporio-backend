@@ -34,7 +34,7 @@ const postSchema = new Schema<TPost>(
         required:false
       }
     },
-    { timestamps: true } 
+    { timestamps: true  , versionKey:false} 
   );
   
   // Create the Post model
