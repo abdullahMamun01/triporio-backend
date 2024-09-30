@@ -6,7 +6,41 @@ import PostModel from '../model/post.model';
 import { findUser } from '../../user/user.utils';
 
 const allPost = async () => {
-  const posts = await PostModel.find({});
+  const posts = await PostModel.aggregate([
+    {
+      $lookup: {
+        from: 'comments', // Name of the comment collection
+        localField: '_id', // Post's _id field
+        foreignField: 'post', // The field in the comment schema that links to the post
+        as: 'comments', // Alias for the comments array
+      },
+    },
+    {
+      $lookup: {
+        from: 'votes', // Name of the comment collection
+        localField: '_id', // Post's _id field
+        foreignField: 'post', // The field in the comment schema that links to the post
+        as: 'votes', // Alias for the comments array
+      },
+    },
+    {
+      $addFields: {
+        commentCount: { $size: '$comments' }, // Add a field for the comment count
+        upvote: { $size: '$votes.upvote' }, // Add a field for the comment count
+        downVote: { $size: '$votes.downvote' }, // Add a field for the comment count
+
+
+      },
+    },
+
+    {
+      $project: {
+        
+        comments: 0, 
+        votes: 0
+      },
+    },
+  ]);
   return posts;
 };
 

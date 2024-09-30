@@ -14,7 +14,7 @@ const CommentSchema = new Schema<TComment>({
     description: { type: String, required: true },
     replies: [ReplySchema], // Nested replies
   },
-});
+}, {timestamps: true , versionKey:false});
 
 const CommentModel = model<TComment>('Comments', CommentSchema);
 

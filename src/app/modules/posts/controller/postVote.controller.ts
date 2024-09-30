@@ -6,7 +6,7 @@ import { voteService } from '../services/postVote.service';
 
 const upvote = catchAsync(async (req: Request, res: Response) => {
   const postId = req.params.postId;
-  const upvoted = await voteService.upvote(req.user.userId, postId);
+  const upvoted = await voteService.upvote( postId,req.user.userId,);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     data: upvoted,
@@ -17,7 +17,7 @@ const upvote = catchAsync(async (req: Request, res: Response) => {
 
 const downVote = catchAsync(async (req: Request, res: Response) => {
   const postId = req.params.postId;
-  const downVoted = await voteService.downVote(req.user.userId, postId);
+  const downVoted = await voteService.downvote( postId,req.user.userId,);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     data: downVoted,
