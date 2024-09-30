@@ -5,6 +5,8 @@ import { USER_ROLE } from '../user/user.constants';
 import { validateRequest } from '../../middleware/validateRequest';
 import postValidationSchena from './post.validation';
 import { voteController } from './controller/postVote.controller';
+import { commentValidateSchema } from '../comments/comment.validation';
+import { commentController } from '../comments/comment.controller';
 
 const router = express.Router();
 router.get('/', postController.getAllPost);
@@ -48,5 +50,19 @@ router.patch(
   authoRization(USER_ROLE.user),
   voteController.downVote,
 );
+
+
+//for comment
+router.get('/:postId/comments', commentController.getCommentListByPost);
+
+router.post(
+  '/:postId/comments',
+  validateRequest(commentValidateSchema),
+  authoRization(USER_ROLE.user),
+  commentController.addComment,
+);
+
+
+
 
 export const postRoutes = router;

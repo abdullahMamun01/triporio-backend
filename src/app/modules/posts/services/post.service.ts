@@ -9,35 +9,31 @@ const allPost = async () => {
   const posts = await PostModel.aggregate([
     {
       $lookup: {
-        from: 'comments', // Name of the comment collection
-        localField: '_id', // Post's _id field
-        foreignField: 'post', // The field in the comment schema that links to the post
-        as: 'comments', // Alias for the comments array
+        from: 'votes', // The 'votes' collection
+        localField: '_id',
+        foreignField: 'postId',
+        as: 'votes', // Add all votes related to each post
       },
     },
     {
       $lookup: {
-        from: 'votes', // Name of the comment collection
-        localField: '_id', // Post's _id field
-        foreignField: 'post', // The field in the comment schema that links to the post
-        as: 'votes', // Alias for the comments array
+        from: 'comments', // The 'comments' collection
+        localField: '_id',
+        foreignField: 'post',
+        as: 'comments', // Add all comments related to each post
       },
     },
     {
       $addFields: {
-        commentCount: { $size: '$comments' }, // Add a field for the comment count
-        upvote: { $size: '$votes.upvote' }, // Add a field for the comment count
-        downVote: { $size: '$votes.downvote' }, // Add a field for the comment count
-
-
+        upvoteCount: {$sum: "$votes.upvoteCount" } ,
+        downvoteCount: {$sum: "$votes.downvoteCount" } ,
+        commentCount: { $size: '$comments' }, // Count comments
       },
     },
-
     {
       $project: {
-        
-        comments: 0, 
-        votes: 0
+        votes: 0, // Exclude votes if not needed in the response
+        comments: 0, // Exclude comments if not needed in the response
       },
     },
   ]);

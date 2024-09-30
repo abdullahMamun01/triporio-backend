@@ -1,18 +1,17 @@
-import { Schema } from 'mongoose';
+import {  Types } from 'mongoose';
 
-type TReply = {
-  parentId: Schema.Types.ObjectId;
-  user: Schema.Types.ObjectId;
-  replies: string;
-};
 
 type TComment = {
-  user: Schema.Types.ObjectId;
-  post: Schema.Types.ObjectId;
-  comment: {
-    description: string;
-    replies?: TReply[];
-  };
+  user: Types.ObjectId;
+  post: Types.ObjectId;
+  comment: string
 };
+
+
+export type TUpdateComment = {
+  user: Types.ObjectId;
+  commentId: Types.ObjectId;
+  newComment: string
+}
 
 export default TComment;

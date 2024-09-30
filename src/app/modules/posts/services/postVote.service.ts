@@ -64,12 +64,10 @@ const upvote = async (postId: string, userId: string) => {
   } else if (hasDownVoted) {
     //if alread has downvote update to upvote request
     const doVote = await VoteModel.findOneAndUpdate(
-      { postId },
+      { postId, 'votes.userId': new Types.ObjectId(userId) },
       {
         $inc: { upvoteCount: 1, downvoteCount: -1 },
-        $set: {
-          votes: { userId: new Types.ObjectId(userId), voteType: 'upvote' },
-        },
+        $set: { 'votes.$.voteType': 'upvote' },
       },
       { new: true, runValidators: true },
     );
@@ -118,7 +116,7 @@ const downvote = async (postId: string, userId: string) => {
     });
     return newVote;
   }
-  //check already have downvote 
+  //check already have downvote
   const existingVote = await VoteModel.findOne({
     postId,
     votes: {
@@ -146,13 +144,10 @@ const downvote = async (postId: string, userId: string) => {
     return withdrawDownvote;
   } else if (hasUpvoted) {
     const doVote = await VoteModel.findOneAndUpdate(
-      { postId },
+      { postId, 'votes.userId': new Types.ObjectId(userId) },
       {
+        $set: { 'votes.$.voteType': 'downvote' },
         $inc: { downvoteCount: 1, upvoteCount: -1 },
-
-        $set: {
-          votes: { userId: new Types.ObjectId(userId), voteType: 'downvote' },
-        },
       },
       { new: true, runValidators: true },
     );
