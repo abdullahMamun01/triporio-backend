@@ -9,7 +9,9 @@ export type TUser = {
     role: 'user' | 'admin',
     address: string ,
     image?: string 
-    isVerified?: boolean
+    isVerified?: boolean ,
+    bio?:string,
+    location?: string
 }
 
 export type TLogin = {

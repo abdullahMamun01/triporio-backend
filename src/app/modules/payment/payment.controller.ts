@@ -2,50 +2,26 @@ import httpStatus from 'http-status';
 import config from '../../config';
 import { catchAsync } from '../../utils/catchAsync';
 import stripe from '../../utils/stripe';
-import { Payment, TStripePaymentService } from './payment.type';
+
 import { Request, Response } from 'express';
 import AppError from '../../error/AppError';
 import Stripe from 'stripe';
 import sendResponse from '../../utils/sendResponse';
 import { parseStripeMetaData } from './payment.utils';
-import { BookingService } from '../booking/booking.service';
-import { convertToTBooking } from '../booking/booking.utils';
-import { paymentService } from './payment.service';
-import { SlotModel } from '../slot/slot.model';
 
-const Logo = `https://img.freepik.com/free-vector/flat-car-wash-logo-template_52683-102704.jpg?t=st=1725300504~exp=1725301104~hmac=a9efe7c60cf3dd1ac4da7acb3c8400df6a638431cb94067561c16fb5246ae41a`;
+import { paymentService } from './payment.service';
+import { userService } from '../user/user.service';
+import { Types } from 'mongoose';
+
+
+
 const createStripeCheckoutSession = catchAsync(
   async (req: Request, res: Response) => {
-    const {
-      name,
-      price,
-      slotId,
-      serviceId,
-      vehicleType,
-      vehicleBrand,
-      manufacturingYear,
-      vehicleModel,
-      registrationPlate,
-    }: TStripePaymentService = req.body;
-
-    const slot = await SlotModel.findById(slotId);
-    if (slot?.isBooked === 'booked') {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        'the slot you request that already booked!',
-      );
-    }
-
-    const stripeMetadata = JSON.stringify({
-      slotId,
-      serviceId,
-      vehicleType,
-      vehicleBrand,
-      manufacturingYear,
-      vehicleModel,
-      registrationPlate,
-    });
-    const priceInCents = price * 100;
+    
+    const profileName  = req.body.profileName
+    const thumnail = `https://thumbs.dreamstime.com/b/approved-icon-profile-verification-accept-badge-quality-check-mark-sticker-tick-vector-illustration-128840911.jpg`
+    const stripeMetadata = JSON.stringify({userId: req.user.userId});
+    const priceInCents = 20 * 100;
     // Create the checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -56,8 +32,9 @@ const createStripeCheckoutSession = catchAsync(
           price_data: {
             currency: 'usd',
             product_data: {
-              name: name,
-              images: [Logo],
+              name: `Premium Profile Verification - ${profileName}`,
+              images : [thumnail]
+      
             },
             unit_amount: priceInCents, // Use rounded integer value
           },
@@ -83,16 +60,17 @@ const createStripeCheckoutSession = catchAsync(
   },
 );
 
-const confirmPaymentAndBooked = catchAsync(
+const confirmPaymentAndVerifiedProfile = catchAsync(
   async (req: Request, res: Response) => {
+
     const { session_id } = req.body;
-    const userId = req.user.userId;
     const checkoutSession = await stripe.checkout.sessions.retrieve(
       session_id,
       {
         expand: ['line_items', 'payment_intent'],
       },
     );
+  
     if (!checkoutSession) {
       throw new AppError(
         httpStatus.BAD_REQUEST,
@@ -114,29 +92,28 @@ const confirmPaymentAndBooked = catchAsync(
       throw new AppError(httpStatus.BAD_REQUEST, 'Invalid session_id');
     }
     const parseMetaData = await parseStripeMetaData(checkoutSession.metadata);
-    const bookingPayload = convertToTBooking(parseMetaData, userId);
-    const booking = await BookingService.bookSlotIntoDB(bookingPayload);
 
-    const paymentPayload: Payment = {
-      user: userId,
-      booking: booking?._id,
-      service: booking?.service,
-      paymentIntentId: payment_intent.id,
-      paymentMethod: checkoutSession.payment_method_types[0] as 'card',
-      paymentStatus: checkoutSession.status,
-      paymentDate: new Date(Date.now()),
-      isProcessed: checkoutSession.status === 'complete',
-    };
-    const payment = await paymentService.paymentSaveToDB(paymentPayload);
+    const payment = await paymentService.paymentSaveToDB({
+      amount: 20 ,
+      paymentIntentId: payment_intent.id ,
+      paymentDate: new Date() ,
+      isProcessed : true,
+      paymentMethod : payment_intent.payment_method_types[0] ,
+      user:  parseMetaData.userId,
+      paymentStatus : 'complete'
+    })
+    const user = await userService.updateVerifyProfile(parseMetaData.userId)
+  
+  
 
     sendResponse(res, {
       success: true,
       statusCode: httpStatus.OK,
       data: {
-        paymentInfo: payment,
-        bookingInfo: booking,
+        payment ,
+        user
       },
-      message: 'Slot Booking  successfully',
+      message: 'Ueser Verfiy profile successfully',
     });
   },
 );
@@ -168,7 +145,7 @@ const getSinglePaymentList = catchAsync(async (req: Request, res: Response) => {
 
 export const PaymentController = {
   createStripeCheckoutSession,
-  confirmPaymentAndBooked,
+  confirmPaymentAndVerifiedProfile,
   getAllPeymentList,
   getSinglePaymentList,
 };

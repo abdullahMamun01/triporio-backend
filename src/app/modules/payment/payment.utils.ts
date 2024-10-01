@@ -13,30 +13,14 @@ export const parseStripeMetaData = async (metadata: any) => {
         // Parse the metadata details
         const metaInfo = JSON.parse(metadata.details);
         // Destructure and extract all fields
-        const {
-            serviceId:service,
-            slotId: slot,
-            vehicleType,
-            vehicleBrand,
-            manufacturingYear,
-            vehicleModel,
-            registrationPlate
-        } = metaInfo;
+    
 
-        if (!service || !slot) {
+        if (!metaInfo) {
             throw new AppError(httpStatus.BAD_REQUEST, 'Invalid service details');
         }
 
         // Return all data
-        return { 
-            service, 
-            slot, 
-            vehicleType, 
-            vehicleBrand, 
-            manufacturingYear, 
-            vehicleModel, 
-            registrationPlate 
-        };
+        return metaInfo;
     } catch (error) {
         // Handle JSON parse errors or other issues
         throw new AppError(httpStatus.BAD_REQUEST, `Failed to parse service details:`);

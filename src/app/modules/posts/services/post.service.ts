@@ -5,7 +5,14 @@ import TPost from '../interface/post.interface';
 import PostModel from '../model/post.model';
 import { findUser } from '../../user/user.utils';
 
-const allPost = async () => {
+const allPost = async (payload : Record<string, unknown>) => {
+  const page = payload.page as number
+  const limit = payload.limit as number
+
+
+  const totalPosts = await PostModel.countDocuments();
+  const totalPage = Math.ceil(totalPosts / limit);
+  
   const posts = await PostModel.aggregate([
     {
       $lookup: {
@@ -25,9 +32,9 @@ const allPost = async () => {
     },
     {
       $addFields: {
-        upvoteCount: {$sum: "$votes.upvoteCount" } ,
-        downvoteCount: {$sum: "$votes.downvoteCount" } ,
-        commentCount: { $size: '$comments' }, // Count comments
+        upvoteCount: { $sum: "$votes.upvoteCount" },
+        downvoteCount: { $sum: "$votes.downvoteCount" },
+        commentCount: { $size: "$comments" }, // Count comments
       },
     },
     {
@@ -36,9 +43,22 @@ const allPost = async () => {
         comments: 0, // Exclude comments if not needed in the response
       },
     },
+    {
+      $skip: (page - 1) * limit, // Corrected skipping logic
+    },
+    {
+      $limit: limit,
+    },
   ]);
-  return posts;
+
+  return {
+    totalPage: totalPage,
+    page: page,
+    data: posts,
+  };
 };
+
+
 
 const userPosts = async (userId: string) => {
   const posts = await PostModel.find({ userId });

@@ -1,22 +1,14 @@
-import mongoose, { Schema } from "mongoose";
-import { Payment } from "./payment.type";
+import mongoose, { Schema } from 'mongoose';
+import { Payment } from './payment.type';
 
-const PaymentSchema = new Schema<Payment>({
+const PaymentSchema = new Schema<Payment>(
+  {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
-    booking: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Bookings',
-      required: true,
-    },
-    service: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'CarWashService',
-
-    },
+    amount: { type: Number, required: true },
     paymentIntentId: {
       type: String,
       required: true,
@@ -40,8 +32,10 @@ const PaymentSchema = new Schema<Payment>({
       type: Boolean,
       default: false,
     },
-  } , {
-    timestamps: true , 
-    versionKey:false
-  });
-  export const PaymentModel = mongoose.model<Payment>('Payment', PaymentSchema);
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  },
+);
+export const PaymentModel = mongoose.model<Payment>('Payment', PaymentSchema);

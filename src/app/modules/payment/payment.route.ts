@@ -14,7 +14,7 @@ router.get('/' ,authoRization(USER_ROLE.admin) , PaymentController.getAllPeyment
 router.get('/user-payment' ,authoRization(USER_ROLE.user) , PaymentController.getSinglePaymentList)
 
 router.post('/stripe-checkout',authoRization('user') ,validateRequest(stripePaymentServiceSchema), PaymentController.createStripeCheckoutSession)
-router.post('/confirm-payment',authoRization('user'),validateRequest(stripeSessionSchema) , PaymentController.confirmPaymentAndBooked)
+router.post('/confirm-payment',authoRization('user'),validateRequest(stripeSessionSchema) , PaymentController.confirmPaymentAndVerifiedProfile)
 
 
 export const paymentRoutes = router

@@ -8,7 +8,15 @@ import { uploadImage } from '../../../utils/uploadImage';
 import PostModel from '../model/post.model';
 
 const getAllPost = catchAsync(async (req: Request, res: Response) => {
-  const postList = await PostService.allPost();
+  const page = parseInt(req.query.page as string, 10) || 1;
+  const limit = parseInt(req.query.limit as string, 10) || 10;
+
+  const queryParams = {
+    page: page,
+    limit: limit,
+  };
+
+  const postList = await PostService.allPost(queryParams);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     data: postList,
@@ -28,9 +36,9 @@ const getUserPosts = catchAsync(async (req: Request, res: Response) => {
 });
 
 const singlePost = catchAsync(async (req: Request, res: Response) => {
-  const postId = req.params.postId
-  const userId = req.user.userId
-  const userPosts = await PostService.singlePost(postId , userId);
+  const postId = req.params.postId;
+  const userId = req.user.userId;
+  const userPosts = await PostService.singlePost(postId, userId);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     data: userPosts,
@@ -38,7 +46,6 @@ const singlePost = catchAsync(async (req: Request, res: Response) => {
     message: 'Single User posts retrieved successfully',
   });
 });
-
 
 const createPost = catchAsync(async (req: Request, res: Response) => {
   if (!req.files) {
@@ -107,5 +114,5 @@ export const postController = {
   createPost,
   updatePost,
   deletPost,
-  singlePost
+  singlePost,
 };

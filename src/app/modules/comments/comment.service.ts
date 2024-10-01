@@ -18,17 +18,17 @@ const addComment = async (payload: TComment) => {
 };
 
 const displayAllComments = async (postId: string) => {
-  // return await CommentModel.find({ post: postId });
+ 
   const commentList = await CommentModel.aggregate([
     {
       $match :  {'post' :  new Types.ObjectId(postId) }
     } ,
     {
       $lookup: {
-        from: 'replies', // The 'comments' collection
+        from: 'replies',
         localField: '_id',
         foreignField: 'commentId',
-        as: 'replies', // Add all comments related to each post
+        as: 'replies',
       },
     },
     {

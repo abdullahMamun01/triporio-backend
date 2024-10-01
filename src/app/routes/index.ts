@@ -4,12 +4,14 @@ import { authRoutes } from '../modules/auth/auth.route';
 import { postRoutes } from '../modules/posts/post.routes';
 import { commentRoutes } from '../modules/comments/comment.route';
 
+import { paymentRoutes } from '../modules/payment/payment.route';
+
 
 const router = Router();
 
 const routes = [
   {
-    path: '/',
+    path: '/users',
     route: userRoutes,
   },
   {
@@ -23,7 +25,11 @@ const routes = [
   {
     path: '/comments',
     route: commentRoutes,
-  }
+  },
+  {
+    path: '/payment',
+    route: paymentRoutes,
+  },
 
 
 ];

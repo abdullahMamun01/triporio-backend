@@ -47,6 +47,14 @@ const userSchema = new Schema<TUser>(
       required: false,
       default: false,
     },
+    bio : {
+      type: String,
+      required: true,
+    },
+    location : {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,

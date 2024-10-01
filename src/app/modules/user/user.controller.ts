@@ -4,7 +4,7 @@ import { userService } from './user.service';
 import sendResponse from '../../utils/sendResponse';
 import AppError from '../../error/AppError';
 import { uploadImage } from '../../utils/uploadImage';
-import fileUpload from 'express-fileupload';
+
 import { TUser } from './user.interface';
 
 const signupController = catchAsync(async (req, res) => {
@@ -15,6 +15,17 @@ const signupController = catchAsync(async (req, res) => {
     message: 'User registered successfully',
     statusCode: httpStatus.OK,
     data: user,
+  });
+});
+
+const verifyEligibility = catchAsync(async (req, res) => {
+
+  const verifyProfile = await userService.checkVerifyEligibility(req.user.userId);
+  sendResponse(res, {
+    success: true,
+    message: 'User registered successfully',
+    statusCode: httpStatus.OK,
+    data: verifyProfile,
   });
 });
 
@@ -64,8 +75,8 @@ const updateProfileController = catchAsync(async (req, res) => {
   };
 
   if (file) {
-    const image = await uploadImage(file as fileUpload.FileArray);
-    payload['image'] = image[0];
+    const image = await uploadImage(file);
+    payload.image = image[0];
   }
 
   const updateProfile = await userService.updateProfileToDB(
@@ -86,4 +97,5 @@ export const userController = {
   getAllUserController,
   getSingleUserController,
   updateProfileController,
+  verifyEligibility
 };
