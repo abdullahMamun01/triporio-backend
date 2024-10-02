@@ -5,15 +5,12 @@ import AppError from '../../error/AppError';
 import httpStatus from 'http-status';
 import { findUserByEmail } from '../user/user.utils';
 
-
-
-
-export const createToken = (
-  JwtPayload: { email: string; role: string },
+export const createToken = <T extends object>(
+  jwtPayload: T,
   secretKey: string,
-  expiresIn: string,
-) => {
-  return jwt.sign(JwtPayload, secretKey, { expiresIn });
+  expiresIn: string
+): string => {
+  return jwt.sign(jwtPayload, secretKey, { expiresIn });
 };
 
 export const compareValidPass = async (
@@ -25,30 +22,30 @@ export const compareValidPass = async (
 };
 
 export const verifyToken = async (token: string): Promise<JwtPayload> => {
-
   try {
     const decoded = jwt.verify(
       token,
       config.accessTokenSecret as string,
-    ) as JwtPayload ;
- 
+    ) as JwtPayload;
+
     if (!decoded) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized user');
     }
-  
+
     const user = await findUserByEmail(decoded?.email);
     if (!user) {
       throw new AppError(httpStatus.NOT_FOUND, 'This user is not found !');
     }
 
-    if (  user.role != decoded.role || user.email != decoded.email ) {
-
+    if (user.role != decoded.role || user.email != decoded.email) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized user');
     }
 
     return decoded;
   } catch (error) {
-   
-    throw new AppError(httpStatus.UNAUTHORIZED, 'JWT token has expired. Please log in again.');
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      'JWT token has expired. Please log in again.',
+    );
   }
 };

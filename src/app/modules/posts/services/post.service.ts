@@ -49,8 +49,8 @@ const allPost = async (payload : Record<string, unknown>) => {
     {
       $limit: limit,
     },
-  ]);
-
+    
+  ])
   return {
     totalPage: totalPage,
     page: page,
