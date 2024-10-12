@@ -1,17 +1,14 @@
-
-
-
-
 import express from 'express';
 import { validateRequest } from '../../middleware/validateRequest';
 
 import { verificationController } from './verification.controller';
-import { verifiationEamilSchema, verificationOtpSchema,resetPasswordSchema } from './verification.validation';
-
+import {
+  verifiationEamilSchema,
+  verificationOtpSchema,
+  resetPasswordSchema,
+} from './verification.validation';
 
 const verifyRoutes = express.Router();
-
-
 
 verifyRoutes.post(
   '/forgot-password',
@@ -32,4 +29,4 @@ verifyRoutes.post(
   verificationController.resetPassword,
 );
 
-export default verifyRoutes
+export default verifyRoutes;

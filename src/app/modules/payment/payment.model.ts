@@ -32,6 +32,11 @@ const PaymentSchema = new Schema<Payment>(
       type: Boolean,
       default: false,
     },
+    subscription: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Subscription',
+      required: false, // Not every payment is linked to a subscription
+    },
   },
   {
     timestamps: true,

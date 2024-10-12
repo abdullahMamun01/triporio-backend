@@ -6,7 +6,6 @@ import { replyValidateSchema } from './reply.validation';
 import { validateRequest } from '../../middleware/validateRequest';
 import { replyController } from './reply.controller';
 
-
 const replyRouter = express.Router();
 
 replyRouter.get('/:commentId/reply', replyController.getRepliesByComment);
@@ -18,6 +17,4 @@ replyRouter.post(
   replyController.addReply,
 );
 
-
-
-export default replyRouter
+export default replyRouter;

@@ -7,7 +7,7 @@ import userRegisterValidationSchema, {
 } from './user.validation';
 import { authoRization } from '../../middleware/authoRization';
 import { USER_ROLE } from './user.constants';
-import { postController } from '../posts/controller/post.controller';
+import { postController } from '../posts/post.controller';
 import { followingRoutes } from '../follow/follow.routes';
 
 const router = express.Router();
@@ -26,16 +26,21 @@ router.get(
 );
 
 router.get(
-  '/me',
-  authoRization(USER_ROLE.user),
+  '/:userId',
+  // authoRization(USER_ROLE.user),
   userController.getSingleUserController,
 );
 
+// router.get(
+//   '/user/:userId',
+//   authoRization(USER_ROLE.user),
+//   postController.getUserPosts,
+// );
 router.get(
-  '/me/posts',
-  authoRization(USER_ROLE.user),
+  '/:userId/posts',
   postController.getUserPosts,
 );
+
 
 router.post(
   '/signup',
@@ -44,19 +49,19 @@ router.post(
 );
 
 router.put(
-  '/users/:userId/role',
+  '/:userId/role',
   validateRequest(userRoleSchema),
   authoRization(USER_ROLE.admin),
   userController.updateUserRoleController,
 );
 
-router.put(
-  '/me/update-profile',
+router.patch(
+  '/me/profile',
   validateRequest(updateUserValidateSchema),
   authoRization(USER_ROLE.user),
   userController.updateProfileController,
 );
 
-router.use("/" , followingRoutes)
+router.use('/', followingRoutes);
 
 export const userRoutes = router;

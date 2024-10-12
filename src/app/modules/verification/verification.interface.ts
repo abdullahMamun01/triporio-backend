@@ -6,6 +6,7 @@ type TVerification = {
   token: string;
   sentAt: Date;
   verified?: boolean;
+  expiresAt: Date 
 };
 
 export type TResetPasswordOtpPayload = {

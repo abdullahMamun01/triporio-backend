@@ -6,7 +6,11 @@ import { USER_ROLE } from '../user/user.constants';
 import { followingController } from './follow.controller';
 
 const router = express.Router();
-
+router.get(
+  '/:userId/follow-status',
+  authoRization(USER_ROLE.user),
+  followingController.isFollowingUser,
+);
 router.post(
   '/:userId/follow',
 

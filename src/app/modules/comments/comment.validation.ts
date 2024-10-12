@@ -12,5 +12,4 @@ const updateCommentValidateSchema = z.object({
   }),
 });
 
-
-export { commentValidateSchema ,updateCommentValidateSchema};
+export { commentValidateSchema, updateCommentValidateSchema };

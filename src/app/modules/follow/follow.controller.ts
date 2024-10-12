@@ -7,21 +7,26 @@ import { followingService } from './follow.service';
 
 const followingUser = catchAsync(async (req: Request, res: Response) => {
   const followingId = req.params.userId;
-  const follow = await followingService.followUser(followingId, req.user.userId);
+  const isFollowing = await followingService.followUser(
+    followingId,
+    req.user.userId,
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    data: follow,
+    data: !!isFollowing,
     success: true,
     message: 'User following  successfully',
   });
 });
 
-
 const unfollowUser = catchAsync(async (req: Request, res: Response) => {
   const unfollowId = req.params.userId;
 
-  const follow = await followingService.unfollowUser(unfollowId, req.user.userId);
+  const follow = await followingService.unfollowUser(
+    unfollowId,
+    req.user.userId,
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -31,7 +36,25 @@ const unfollowUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const isFollowingUser = catchAsync(async (req: Request, res: Response) => {
+
+  const followingId = req.params.userId ;
+  const currentUserId = req.user.userId;
+  const follow = await followingService.isFollowingUserFromDB(
+    followingId,
+    currentUserId,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    data: follow,
+    success: true,
+    message: 'User following  successfully',
+  });
+});
+
 export const followingController = {
   followingUser,
-  unfollowUser
+  unfollowUser,
+  isFollowingUser
 };

@@ -5,8 +5,11 @@ import { TUser } from './user.interface';
 import UserModel from './user.model';
 import { findUser, findUserByEmail } from './user.utils';
 import { USER_ROLE } from './user.constants';
-import PostModel from '../posts/model/post.model';
+
 import { Types } from 'mongoose';
+
+import { PaymentModel } from '../payment/payment.model';
+import VoteModel from '../votes/postVote.model';
 
 const getAllUserFromDB = async (adminId: string) => {
   const users = await UserModel.find({ _id: { $ne: adminId } });
@@ -83,8 +86,21 @@ const updateProfileToDB = async (userId: string, payload: Partial<TUser>) => {
 
 const updateVerifyProfile = async (userId: string) => {
   const user = await findUser(userId);
-  if(user.isVerified){
-    throw new AppError(httpStatus.CONFLICT , "User already verified!")
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User Not found!');
+  }
+  if (user.isVerified) {
+    throw new AppError(httpStatus.CONFLICT, 'User already verified!');
+  }
+  const payment = await PaymentModel.findOne({ user: userId }).lean();
+  if (!payment || payment?.paymentStatus === 'failed') {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      'Please take a subscription befor veirified!',
+    );
+  }
+  if (user.isVerified) {
+    throw new AppError(httpStatus.CONFLICT, 'User already verified!');
   }
   const updateUser = await UserModel.findOneAndUpdate(
     { _id: userId },
@@ -97,38 +113,26 @@ const updateVerifyProfile = async (userId: string) => {
 const checkVerifyEligibility = async (userId: string) => {
   await findUser(userId);
 
-  const checkUpvoteGreaterThenFour = await PostModel.aggregate([
-    { $match: { userId: new Types.ObjectId(userId) } },
+  // const upvote = await VoteModel.find({ userId , voteType:'upvote'})
+
+  const isEligible = await VoteModel.aggregate([
+    { $match: { userId: new Types.ObjectId(userId), voteType: 'upvote' } },
+
     {
-      $lookup: {
-        from: 'votes',
-        localField: '_id',
-        foreignField: 'postId',
-        as: 'votes',
-      },
-    },
-    {
-      $addFields: {
-        totalUpvotes: { $sum: '$votes.upvoteCount' }, // Sum the upvotes from the votes array
-      },
-    },
-    {
-      $match: {
-        'votes.upvoteCount': { $gte: 5 }, // Match only posts where at least one vote has 5 or more upvotes
+      $group: {
+        _id: '$postId',
+        totalUpvotes: { $sum: 1 },
       },
     },
 
     {
-      $project: {
-        votes: 0,
+      $match: {
+        totalUpvotes: { $gt: 1 },
       },
     },
   ]);
 
-  return (
-    checkUpvoteGreaterThenFour.length > 0 &&
-    checkUpvoteGreaterThenFour[0].totalUpvotes >= 5
-  );
+  return isEligible.length > 0 && isEligible[0].totalUpvotes >= 1;
 };
 
 export const userService = {

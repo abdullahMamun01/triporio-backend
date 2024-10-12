@@ -22,12 +22,11 @@ const loginUser = async (payload: TLogin) => {
   }
 
   const jwtPayload = {
-    userId: user._id ,
+    userId: user._id,
     email: user.email,
     fistName: user.firstName,
     lastName: user.lastName,
     role: user.role,
-
   };
   //access token generate
   const accessToken = createToken(
@@ -45,7 +44,7 @@ const loginUser = async (payload: TLogin) => {
   return {
     user: remainingField,
     token: accessToken,
-    refreshToken
+    refreshToken,
   };
 };
 

@@ -52,5 +52,4 @@ const emailOtpTemplate = (otp: string) => {
 </body>`;
 };
 
-
-export  {emailOtpTemplate}
+export { emailOtpTemplate };

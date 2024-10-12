@@ -1,10 +1,12 @@
 import httpStatus from 'http-status';
 import AppError from '../../error/AppError';
-import PostModel from '../posts/model/post.model';
+
 import { findUser } from '../user/user.utils';
 import TComment, { TUpdateComment } from './comment.interface';
 import CommentModel from './comment.model';
-import { Types } from 'mongoose';
+import { Document, Types } from 'mongoose';
+import PostModel from '../posts/post.model';
+import ReplyModel from '../replies/reply.model';
 
 const addComment = async (payload: TComment) => {
   await findUser(payload.user.toString());
@@ -17,41 +19,83 @@ const addComment = async (payload: TComment) => {
   return comment;
 };
 
+// const displayAllComments = async (postId: string) => {
+//   const commentList = await CommentModel.aggregate([
+//     {
+//       $match: { post: new Types.ObjectId(postId) },
+//     },
+//     {
+//       $lookup: {
+//         from: 'users',
+//         localField: 'user',
+//         foreignField: '_id',
+//         as: 'user',
+//       },
+//     },
+//     {
+//       $lookup: {
+//         from: 'replies',
+//         localField: '_id',
+//         foreignField: 'commentId',
+//         as: 'replies',
+//       },
+//     },
+
+//     {
+//       $addFields: {
+//         replies: '$replies', // Count comments
+//       },
+//     },
+//     {
+//       $lookup: {
+//         from: 'users',
+//         localField: 'replies.user', // Assuming replies have a field called 'user' for user ID
+//         foreignField: '_id',
+//         as: 'replies.user', // This will create a new field 'user' within each reply
+//       },
+//     },
+//     {
+//       $project: {
+//         'user.password': 0, // Exclude sensitive user information, like password
+//         'user.__v': 0, // Optionally exclude the version key
+//         'replies.commentId': 0, // Exclude commentId from replies if not needed
+//         'user.phone': 0,
+//         'user.role': 0,
+//         'user.isVerified': 0,
+//         'user.email': 0,
+//         'user.address': 0,
+//       },
+//     },
+//   ]);
+
+//   return commentList;
+// };
+
 const displayAllComments = async (postId: string) => {
  
-  const commentList = await CommentModel.aggregate([
-    {
-      $match :  {'post' :  new Types.ObjectId(postId) }
-    } ,
-    {
-      $lookup: {
-        from: 'replies',
-        localField: '_id',
-        foreignField: 'commentId',
-        as: 'replies',
-      },
-    },
-    {
-      $addFields: {
- 
-        replies: '$replies' , // Count comments
-      },
-    },
+  const post  = await PostModel.findById(postId)
 
-    {
-      $project: {
-        'replies.commentId': 0, // Exclude votes if not needed in the response
-      },
-    },
-  ])
+  if(!post){
+    throw new AppError(httpStatus.NOT_FOUND , 'The post not found!')
+  }
+  const comments = await CommentModel.find({ post: postId }).sort({
+    createdAt: -1,
+  }).populate({ path: 'user', select: 'firstName lastName image' }).lean();
 
-  return  commentList
+  const commentsWithReplies = comments.map(async (comment) => ({
+    ...comment,
+    replies: await ReplyModel.find({ commentId: comment._id })
+      .populate({ path: 'user', select: 'firstName lastName image' })
+      .select('-commentId'),
+  }));
+  const replise = await Promise.all(commentsWithReplies);
 
+  return replise;
 };
 
 const updateComment = async (payload: TUpdateComment) => {
   await findUser(payload.user.toString());
-  
+
   const comment = await CommentModel.findById(payload.commentId);
   if (!comment) {
     throw new AppError(httpStatus.NOT_FOUND, 'Comment not found');

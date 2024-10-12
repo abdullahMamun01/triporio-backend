@@ -1,19 +1,24 @@
 import { Request, Response } from 'express';
-import { catchAsync } from '../../../utils/catchAsync';
-import { PostService } from '../services/post.service';
-import sendResponse from '../../../utils/sendResponse';
+import { catchAsync } from '../../utils/catchAsync';
+import { PostService } from './post.service';
+import sendResponse from '../../utils/sendResponse';
 import httpStatus from 'http-status';
-import AppError from '../../../error/AppError';
-import { uploadImage } from '../../../utils/uploadImage';
-import PostModel from '../model/post.model';
+import AppError from '../../error/AppError';
+import { uploadImage } from '../../utils/uploadImage';
+import PostModel from './post.model';
 
 const getAllPost = catchAsync(async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string, 10) || 1;
   const limit = parseInt(req.query.limit as string, 10) || 10;
-
+  const searchTerm = req.query.searchTerm;
+  const categories = req.query.categories;
+  const mostVote = req.query.mostVote;
   const queryParams = {
     page: page,
     limit: limit,
+    searchTerm,
+    categories,
+    mostVote,
   };
 
   const postList = await PostService.allPost(queryParams);
@@ -26,7 +31,9 @@ const getAllPost = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getUserPosts = catchAsync(async (req: Request, res: Response) => {
-  const userPosts = await PostService.userPosts(req.user.userId);
+  const userId = req.params.userId;
+
+  const userPosts = await PostService.userPosts(userId);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     data: userPosts,
@@ -37,8 +44,8 @@ const getUserPosts = catchAsync(async (req: Request, res: Response) => {
 
 const singlePost = catchAsync(async (req: Request, res: Response) => {
   const postId = req.params.postId;
-  const userId = req.user.userId;
-  const userPosts = await PostService.singlePost(postId, userId);
+
+  const userPosts = await PostService.singlePost(postId);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     data: userPosts,
@@ -59,7 +66,7 @@ const createPost = catchAsync(async (req: Request, res: Response) => {
   const post = await PostService.createPost({
     ...body,
     images,
-    userId: req.user.userId,
+    user: req.user.userId,
   });
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -86,7 +93,7 @@ const updatePost = catchAsync(async (req: Request, res: Response) => {
   }
 
   const updatePost = await PostService.updatePost(
-    { ...body, userId: req.user.userId, images },
+    { ...body, user: req.user.userId, images },
     postId,
   );
   sendResponse(res, {

@@ -8,7 +8,7 @@ import { findUserByEmail } from '../user/user.utils';
 export const createToken = <T extends object>(
   jwtPayload: T,
   secretKey: string,
-  expiresIn: string
+  expiresIn: string,
 ): string => {
   return jwt.sign(jwtPayload, secretKey, { expiresIn });
 };

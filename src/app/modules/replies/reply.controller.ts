@@ -8,7 +8,7 @@ import { Types } from 'mongoose';
 const addReply = catchAsync(async (req: Request, res: Response) => {
   const commentId = req.params.commentId;
   const reply = req.body;
-  
+
   const userComment = await replyService.addReply({
     commentId: new Types.ObjectId(commentId),
     user: req.user.userId,
@@ -36,5 +36,5 @@ const getRepliesByComment = catchAsync(async (req: Request, res: Response) => {
 
 export const replyController = {
   getRepliesByComment,
-  addReply
+  addReply,
 };

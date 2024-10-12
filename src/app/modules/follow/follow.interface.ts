@@ -6,5 +6,4 @@ type TUserFollowRelations = {
   followers?: Types.ObjectId[];
 };
 
-
-export default TUserFollowRelations
+export default TUserFollowRelations;

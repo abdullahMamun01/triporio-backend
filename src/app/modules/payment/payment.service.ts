@@ -4,7 +4,6 @@ import UserModel from '../user/user.model';
 import { Payment } from './payment.type';
 import { PaymentModel } from './payment.model';
 
-
 const paymentSaveToDB = async (payload: Payment) => {
   const existingPayment = await PaymentModel.findOne({
     paymentIntentId: payload.paymentIntentId,
@@ -12,6 +11,7 @@ const paymentSaveToDB = async (payload: Payment) => {
   if (existingPayment?.paymentStatus === 'complete') {
     throw new AppError(httpStatus.BAD_REQUEST, 'Payment already processed');
   }
+  
 
   const user = await UserModel.findById(payload.user);
   if (!user) {
@@ -22,20 +22,18 @@ const paymentSaveToDB = async (payload: Payment) => {
   return payment;
 };
 
-
 const getAllPaymentList = async (query: Record<string, unknown>) => {
   const page = query?.page ? Number(query.page) : 1;
   const limit = query?.limit ? Number(query.limit) : 10;
   const skip = page - 1;
   const paymentList = await PaymentModel.find()
-  .skip(skip)
-  .limit(limit)
-  .populate([
-    { path: 'service', select: 'name price' },
-    { path: 'user', select: 'name' },
-  ])
-  .select('-__v ');
-
+    .skip(skip)
+    .limit(limit)
+    .populate([
+      { path: 'service', select: 'name price' },
+      { path: 'user', select: 'name' },
+    ])
+    .select('-__v ');
 
   return paymentList;
 };

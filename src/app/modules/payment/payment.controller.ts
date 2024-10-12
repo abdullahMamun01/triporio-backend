@@ -12,16 +12,39 @@ import { parseStripeMetaData } from './payment.utils';
 import { paymentService } from './payment.service';
 import { userService } from '../user/user.service';
 import { Types } from 'mongoose';
-
-
+import { subscriptionService } from '../subscription/subscription.service';
+import { calculateEndDate } from '../subscription/subscription.utils';
+import { SubscriptionModel } from '../subscription/subscription.model';
 
 const createStripeCheckoutSession = catchAsync(
   async (req: Request, res: Response) => {
-    
-    const profileName  = req.body.profileName
-    const thumnail = `https://thumbs.dreamstime.com/b/approved-icon-profile-verification-accept-badge-quality-check-mark-sticker-tick-vector-illustration-128840911.jpg`
-    const stripeMetadata = JSON.stringify({userId: req.user.userId});
-    const priceInCents = 20 * 100;
+    const { profileName, price, subscriptionType } = req.body;
+    const eligibility = await userService.checkVerifyEligibility(
+      req.user.userId,
+    );
+    if (!eligibility) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        'User do not eligible for subscription!',
+      );
+    }
+    const alreadySubscribe = await SubscriptionModel.findOne({
+      user: req.user.userId,
+    }).lean();
+    if (alreadySubscribe?.subscriptionType === subscriptionType) {
+      throw new AppError(
+        httpStatus.CONFLICT,
+        'You already take this subscription!',
+      );
+    }
+
+    const thumnail = `https://thumbs.dreamstime.com/b/approved-icon-profile-verification-accept-badge-quality-check-mark-sticker-tick-vector-illustration-128840911.jpg`;
+    const stripeMetadata = JSON.stringify({
+      userId: req.user.userId,
+      subscriptionType,
+      price,
+    });
+    const priceInCents = price * 100;
     // Create the checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -32,9 +55,8 @@ const createStripeCheckoutSession = catchAsync(
           price_data: {
             currency: 'usd',
             product_data: {
-              name: `Premium Profile Verification - ${profileName}`,
-              images : [thumnail]
-      
+              name: `Premium Profile Verification (${subscriptionType}): - ${profileName}`,
+              images: [thumnail],
             },
             unit_amount: priceInCents, // Use rounded integer value
           },
@@ -52,6 +74,7 @@ const createStripeCheckoutSession = catchAsync(
     res.status(httpStatus.OK).json({
       statusCode: httpStatus.OK,
       message: 'Stripe payment session created successfully',
+      success: true,
       data: {
         sessionId: session.id,
         sessionUrl: session.url, // Use session.url instead of session.success_url
@@ -62,7 +85,6 @@ const createStripeCheckoutSession = catchAsync(
 
 const confirmPaymentAndVerifiedProfile = catchAsync(
   async (req: Request, res: Response) => {
-
     const { session_id } = req.body;
     const checkoutSession = await stripe.checkout.sessions.retrieve(
       session_id,
@@ -70,7 +92,7 @@ const confirmPaymentAndVerifiedProfile = catchAsync(
         expand: ['line_items', 'payment_intent'],
       },
     );
-  
+
     if (!checkoutSession) {
       throw new AppError(
         httpStatus.BAD_REQUEST,
@@ -92,27 +114,35 @@ const confirmPaymentAndVerifiedProfile = catchAsync(
       throw new AppError(httpStatus.BAD_REQUEST, 'Invalid session_id');
     }
     const parseMetaData = await parseStripeMetaData(checkoutSession.metadata);
+    const subscription = await subscriptionService.saveSubscriptionAfterPayment(
+      {
+        user: new Types.ObjectId(parseMetaData.userId),
+        subscriptionType: parseMetaData.subscriptionType,
+        price: Number(parseMetaData.price),
+        subscriptionStartDate: new Date(),
+        subscriptionEndDate: calculateEndDate(parseMetaData.subscriptionType),
+        subscriptionStatus: 'active',
+      },
+    );
 
-    const payment = await paymentService.paymentSaveToDB({
-      amount: 20 ,
-      paymentIntentId: payment_intent.id ,
-      paymentDate: new Date() ,
-      isProcessed : true,
-      paymentMethod : payment_intent.payment_method_types[0] ,
-      user:  parseMetaData.userId,
-      paymentStatus : 'complete'
-    })
-    const user = await userService.updateVerifyProfile(parseMetaData.userId)
-  
-  
+    const payment =
+      subscription &&
+      (await paymentService.paymentSaveToDB({
+        amount: Number(parseMetaData.price),
+        paymentIntentId: payment_intent.id,
+        paymentDate: new Date(),
+        isProcessed: true,
+        paymentMethod: payment_intent.payment_method_types[0],
+        user: parseMetaData.userId,
+        paymentStatus: 'complete',
+        subscription: subscription.toObject()._id,
+      }));
+    const user = await userService.updateVerifyProfile(parseMetaData.userId);
 
     sendResponse(res, {
       success: true,
       statusCode: httpStatus.OK,
-      data: {
-        payment ,
-        user
-      },
+      data: { payment, user },
       message: 'Ueser Verfiy profile successfully',
     });
   },

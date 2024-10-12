@@ -5,6 +5,8 @@ import { postRoutes } from '../modules/posts/post.routes';
 import { commentRoutes } from '../modules/comments/comment.route';
 
 import { paymentRoutes } from '../modules/payment/payment.route';
+import { analyticRoute } from '../modules/analytics/analytics.route';
+import { adminRoutes } from '../modules/admin/admin.route';
 
 
 const router = Router();
@@ -30,8 +32,14 @@ const routes = [
     path: '/payment',
     route: paymentRoutes,
   },
-
-
+  {
+    path: '/analytics',
+    route: analyticRoute,
+  },
+  {
+    path: '/admin',
+    route: adminRoutes,
+  },
 ];
 
 routes.forEach(({ path, route }) => {

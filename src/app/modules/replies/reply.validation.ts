@@ -1,7 +1,4 @@
-
-import { z } from "zod";
-
-
+import { z } from 'zod';
 
 const replyValidateSchema = z.object({
   body: z.object({
@@ -9,5 +6,4 @@ const replyValidateSchema = z.object({
   }),
 });
 
-
-export {replyValidateSchema}
+export { replyValidateSchema };

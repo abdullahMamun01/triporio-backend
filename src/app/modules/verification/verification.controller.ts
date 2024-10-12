@@ -15,7 +15,10 @@ const forgotPassword = catchAsync(async (req: Request, res: Response) => {
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    data: null,
+    data: {
+      otpSent: true,  
+      email,          
+    },
     success: true,
     message: emailOtpSent,
   });
@@ -48,9 +51,6 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
     message: 'otp verified',
   });
 });
-
-
-
 
 export const verificationController = {
   forgotPassword,

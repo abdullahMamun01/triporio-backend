@@ -26,7 +26,7 @@ export const findUser = async (userId: string) => {
     );
   }
 
-  return user
+  return user;
 };
 
 export const isValidRole = (

@@ -41,6 +41,7 @@ const createVerificationModel = async (email: string, otp: string) => {
     token,
     email,
     sentAt: new Date(),
+    expiresAt : Date.now() + 10 * 60 * 1000
   });
 
   return verifyModel;
@@ -57,7 +58,7 @@ const verifyOtp = async (otp: string, email: string) => {
 
   const verfyService = await VerficationModel.findOne({
     userId: findBydEmail._id,
-  });
+  }).sort({ createdAt: -1 });
   if (!verfyService) {
     throw new AppError(httpStatus.FORBIDDEN, 'Invalid otp verify request');
   }
@@ -65,6 +66,7 @@ const verifyOtp = async (otp: string, email: string) => {
   const token = verfyService?.token;
 
   const decoded: TVerificationDecode = jwtDecode(token as string);
+  console.log(decoded.otp , otp)
   if (decoded.otp !== otp) {
     throw new AppError(httpStatus.FORBIDDEN, 'Incorrect OTP.');
   }

@@ -2,7 +2,6 @@ import { Schema, model } from 'mongoose';
 import { TUser } from './user.interface';
 import { hashedPassword } from './user.utils';
 
-
 // Create the Mongoose schema
 const userSchema = new Schema<TUser>(
   {
@@ -47,15 +46,37 @@ const userSchema = new Schema<TUser>(
       required: false,
       default: false,
     },
-    bio : {
+    bio: {
       type: String,
       required: false,
     },
-    location : {
+    location: {
       type: String,
       required: false,
+    },
+    website: {
+      type: String,
+      required: false, // Optional personal website or blog
+    },
+    socialLinks: {
+      type: {
+        facebook: String,
+        twitter: String,
+        instagram: String,
+        linkedin: String,
+      },
+      required: false,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false,
     },
   },
+
   {
     timestamps: true,
     versionKey: false,

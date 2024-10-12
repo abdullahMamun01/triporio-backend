@@ -17,7 +17,7 @@ const login = catchAsync(async (req, res) => {
     success: true,
     statusCode: httpStatus.OK,
     token: loginInfo.token,
-    data: loginInfo.user
+    data: loginInfo.user,
   });
 });
 

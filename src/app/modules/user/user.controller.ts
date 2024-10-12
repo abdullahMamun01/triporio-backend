@@ -19,11 +19,12 @@ const signupController = catchAsync(async (req, res) => {
 });
 
 const verifyEligibility = catchAsync(async (req, res) => {
-
-  const verifyProfile = await userService.checkVerifyEligibility(req.user.userId);
+  const verifyProfile = await userService.checkVerifyEligibility(
+    req.user.userId,
+  );
   sendResponse(res, {
     success: true,
-    message: 'User registered successfully',
+    message: `user subscription eligiblity ${verifyProfile}`,
     statusCode: httpStatus.OK,
     data: verifyProfile,
   });
@@ -58,7 +59,7 @@ const getAllUserController = catchAsync(async (req, res) => {
 });
 
 const getSingleUserController = catchAsync(async (req, res) => {
-  const users = await userService.getSingleUserFromDB(req.user.userId);
+  const users = await userService.getSingleUserFromDB(req.params.userId);
 
   sendResponse(res, {
     success: true,
@@ -97,5 +98,5 @@ export const userController = {
   getAllUserController,
   getSingleUserController,
   updateProfileController,
-  verifyEligibility
+  verifyEligibility,
 };

@@ -9,7 +9,6 @@ import replyRouter from '../replies/reply.routes';
 
 const router = express.Router();
 
-
 router.patch(
   '/:commentId',
   validateRequest(updateCommentValidateSchema),

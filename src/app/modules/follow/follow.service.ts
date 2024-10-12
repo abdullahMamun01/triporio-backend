@@ -37,6 +37,19 @@ const followUser = async (followingId: string, userId: string) => {
   return following;
 };
 
+const isFollowingUserFromDB = async (followingId: string, userId: string) => {
+  const currentUser = await UserModel.findById(userId);
+  const followingUser = await UserModel.findById(followingId);
+  if (!currentUser || !followingUser) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User Not found!');
+  }
+  const isFollowing = await FollowModel.findOne({
+    user: userId,
+    following: { $elemMatch: { $eq: followingId } },
+  });
+  return isFollowing;
+};
+
 const unfollowUser = async (unfollowId: string, userId: string) => {
   const findUnfollowUser = await UserModel.findById(unfollowId);
   const findUser = await UserModel.findById(userId);
@@ -52,16 +65,17 @@ const unfollowUser = async (unfollowId: string, userId: string) => {
     throw new AppError(httpStatus.CONFLICT, 'You are not following this user.');
   }
 
-  const unfollow  =  await FollowModel.findOneAndUpdate(
+  const unfollow = await FollowModel.findOneAndUpdate(
     { user: userId },
     { $pull: { following: unfollowId } },
     { upsert: true, new: true },
   );
 
-  return unfollow
+  return unfollow;
 };
 
 export const followingService = {
   followUser,
-  unfollowUser
+  unfollowUser,
+  isFollowingUserFromDB
 };

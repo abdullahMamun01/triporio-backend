@@ -1,17 +1,15 @@
-import {  Types } from 'mongoose';
-
+import { Types } from 'mongoose';
 
 type TComment = {
   user: Types.ObjectId;
   post: Types.ObjectId;
-  comment: string
+  comment: string;
 };
-
 
 export type TUpdateComment = {
   user: Types.ObjectId;
   commentId: Types.ObjectId;
-  newComment: string
-}
+  newComment: string;
+};
 
 export default TComment;

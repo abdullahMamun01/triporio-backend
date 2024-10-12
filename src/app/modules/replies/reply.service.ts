@@ -19,20 +19,20 @@ const addReply = async (payload: TReply) => {
   return reply;
 };
 
-const repliesByComment  = async (commentId:string) => {
-    const comment = await CommentModel.findById(commentId);
+const repliesByComment = async (commentId: string) => {
+  const comment = await CommentModel.findById(commentId);
   if (!comment) {
     throw new AppError(httpStatus.NOT_FOUND, 'Comment not found!');
   }
 
-  const replies = await ReplyModel.find({commentId}).populate({
+  const replies = await ReplyModel.find({ commentId }).populate({
     path: 'user',
     select: 'firstName lastName images',
   });
-  return  replies
-}
+  return replies;
+};
 
 export const replyService = {
   addReply,
-  repliesByComment 
+  repliesByComment,
 };
