@@ -111,28 +111,23 @@ const updateVerifyProfile = async (userId: string) => {
 };
 
 const checkVerifyEligibility = async (userId: string) => {
-  await findUser(userId);
+  const user = await findUser(userId);
 
   // const upvote = await VoteModel.find({ userId , voteType:'upvote'})
 
-  const isEligible = await VoteModel.aggregate([
-    { $match: { userId: new Types.ObjectId(userId), voteType: 'upvote' } },
+  const result = await VoteModel.aggregate([
+    { $match: { userId: new Types.ObjectId(user._id), voteType: 'upvote' } },
 
     {
       $group: {
-        _id: '$postId',
+        _id: null,
         totalUpvotes: { $sum: 1 },
-      },
-    },
-
-    {
-      $match: {
-        totalUpvotes: { $gt: 1 },
       },
     },
   ]);
 
-  return isEligible.length > 0 && isEligible[0].totalUpvotes >= 1;
+  // Check if the user has more than 1 upvote
+  return result.length > 0 && result[0].totalUpvotes > 1;
 };
 
 export const userService = {

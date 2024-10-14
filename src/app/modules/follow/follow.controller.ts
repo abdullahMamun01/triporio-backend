@@ -53,8 +53,43 @@ const isFollowingUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+const getFollowers = catchAsync(async (req: Request, res: Response) => {
+
+  const userId = req.params.userId;
+  const followers = await followingService.followerListFromDb(
+    userId
+  );
+
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    data: followers,
+    success: true,
+    message: 'Follower list retrive  successfully',
+  });
+});
+
+
+const getFollowingList = catchAsync(async (req: Request, res: Response) => {
+
+  const userId = req.params.userId;
+  const followers = await followingService.followingList(
+    userId
+  );
+
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    data: followers,
+    success: true,
+    message: 'Follower list retrive  successfully',
+  });
+});
 export const followingController = {
   followingUser,
   unfollowUser,
-  isFollowingUser
+  isFollowingUser,
+  getFollowers,
+  getFollowingList
 };

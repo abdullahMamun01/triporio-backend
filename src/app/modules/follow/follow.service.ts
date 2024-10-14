@@ -74,8 +74,58 @@ const unfollowUser = async (unfollowId: string, userId: string) => {
   return unfollow;
 };
 
+const followerListFromDb = async (userId: string) => {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'user not found!');
+  }
+
+  const followerList = await FollowModel.find({ user: userId }).lean();
+
+  if (!followerList[0]?.followers || !followerList[0].followers.length) {
+    return [];
+  }
+
+
+  const populateData = followerList[0].followers.map(async (id) => {
+    const user = await UserModel.findById(id).select(
+      'firstName lastName image',
+    );
+    return user;
+  });
+
+
+  return await Promise.all(populateData);
+};
+
+const followingList = async (userId: string) => {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'user not found!');
+  }
+
+  const followerList = await FollowModel.find({ user: userId }).lean();
+
+  if (!followerList[0]?.followers || !followerList[0].followers.length) {
+    return [];
+  }
+
+
+  const populateData = followerList[0].following.map(async (id) => {
+    const user = await UserModel.findById(id).select(
+      'firstName lastName image',
+    );
+    return user;
+  });
+
+
+  return await Promise.all(populateData);
+};
+
 export const followingService = {
   followUser,
   unfollowUser,
-  isFollowingUserFromDB
+  isFollowingUserFromDB,
+  followerListFromDb,
+  followingList
 };

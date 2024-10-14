@@ -53,17 +53,32 @@ const deleteUser = catchAsync(async (req: Request, res: Response) => {
 });
 
 const blockUser = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.params.userId;
-  
-    const userPosts = await adminService.blockUserFormDB(userId);
-  
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      data: userPosts,
-      success: true,
-      message: 'user blocked successfully',
-    });
+  const userId = req.params.userId;
+
+  const userPosts = await adminService.toggleBlockUserToDB(userId , true);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    data: userPosts,
+    success: true,
+    message: 'user blocked successfully',
   });
+});
+
+
+const unBlockUser = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.params.userId;
+
+  const userPosts = await adminService.toggleBlockUserToDB(userId , false);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    data: userPosts,
+    success: true,
+    message: 'user blocked successfully',
+  });
+});
+
 const deletePost = catchAsync(async (req: Request, res: Response) => {
   const postId = req.params.postId;
 
@@ -96,22 +111,38 @@ const setUserProfileVerifiedStatus = catchAsync(
 );
 
 const updateUserRoleController = catchAsync(async (req, res) => {
-    const { role } = req.body;
-    const { userId } = req.params;
-    if (req.user.userId === userId) {
-      throw new AppError(httpStatus.CONFLICT, 'You cannot change your own role!');
-    }
-  
-    const user = await adminService.updateUserRoleToDB({ userId, role });
-  
-    sendResponse(res, {
-      success: true,
-      message: 'User role update successfully',
-      statusCode: httpStatus.OK,
-      data: user,
-    });
-  });
+  const { role } = req.body;
+  const { userId } = req.params;
+  if (req.user.userId === userId) {
+    throw new AppError(httpStatus.CONFLICT, 'You cannot change your own role!');
+  }
 
+  const user = await adminService.updateUserRoleToDB({ userId, role });
+
+  sendResponse(res, {
+    success: true,
+    message: 'User role update successfully',
+    statusCode: httpStatus.OK,
+    data: user,
+  });
+});
+
+
+const getAllPaymentList = catchAsync(async (req, res) => {
+  const { page, limit } = req.query;
+  const query = {
+    page: page ? Number(page) : 1,
+    limit: limit ? Number(limit) : 10,
+  };
+  const user = await adminService.getAllPaymentListFromDB(query);
+
+  sendResponse(res, {
+    success: true,
+    message: 'User role update successfully',
+    statusCode: httpStatus.OK,
+    data: user,
+  });
+});
 
 export const adminController = {
   getAllUser,
@@ -120,5 +151,7 @@ export const adminController = {
   deletePost,
   setUserProfileVerifiedStatus,
   updateUserRoleController,
-  blockUser
+  blockUser,
+  unBlockUser,
+  getAllPaymentList
 };

@@ -4,18 +4,19 @@ import AppError from '../../error/AppError';
 import UserModel from '../user/user.model';
 import PostModel from '../posts/post.model';
 import { USER_ROLE } from '../user/user.constants';
+import { PaymentModel } from '../payment/payment.model';
 
 const getAllUserFromDB = async (payload: Record<string, unknown>) => {
   const page = (payload.page as number) || 1;
   const limit = (payload.limit as number) || 10;
   const users = await UserModel.find()
     .skip((page - 1) * limit)
-    .limit(limit);
-
+    .limit(limit)
+    .select('_id firstName lastName email isDeleted isVerified isBlocked role');
   return users;
 };
 
-const blockUserToDB = async (userId: string) => {
+const toggleBlockUserToDB = async (userId: string, block: boolean) => {
   const user = await UserModel.findById(userId);
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'user not found!');
@@ -25,12 +26,32 @@ const blockUserToDB = async (userId: string) => {
       _id: userId,
     },
     {
-      isBlocked: true,
+      isBlocked: block,
     },
     { new: true, runValidators: true },
   );
 
   return deleteUser;
+};
+
+const getAllPaymentListFromDB = async (payload: Record<string, unknown>) => {
+  const page = (payload.page as number) || 1;
+  const limit = (payload.limit as number) || 10;
+  const users = await PaymentModel.find()
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .select('_id amount paymentStatus createdAt subscription ')
+    .populate([
+      {
+        path: 'user',
+        select: '_id firstName lastName',
+      },
+      {
+        path: 'subscription',
+        select: 'subscriptionType',
+      },
+    ]);
+  return users;
 };
 
 const deleteUserFormDB = async (userId: string) => {
@@ -51,24 +72,6 @@ const deleteUserFormDB = async (userId: string) => {
   return deleteUser;
 };
 
-const blockUserFormDB = async (userId: string) => {
-  const user = await UserModel.findById(userId);
-  if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, 'user not found!');
-  }
-  const deleteUser = await UserModel.findOneAndUpdate(
-    {
-      _id: userId,
-    },
-    {
-      isBlocked: true,
-    },
-    { new: true, runValidators: true },
-  );
-
-  return deleteUser;
-};
-
 const getAllPostsFromDB = async (payload: Record<string, unknown>) => {
   const page = (payload.page as number) || 1;
   const limit = (payload.limit as number) || 10;
@@ -77,9 +80,9 @@ const getAllPostsFromDB = async (payload: Record<string, unknown>) => {
     .limit(limit)
     .populate({
       path: 'user',
-      select: 'firstName lastName image',
+      select: 'firstName lastName ',
     })
-    .select('title createdAt');
+    .select('_id title createdAt');
   return posts;
 };
 
@@ -115,7 +118,6 @@ const updateVerifiedProfile = async (userId: string, isVerified: boolean) => {
   return updateVerifiedUser;
 };
 
-
 const updateUserRoleToDB = async (payload: {
   userId: string;
   role: (typeof USER_ROLE)[keyof typeof USER_ROLE];
@@ -139,10 +141,10 @@ const updateUserRoleToDB = async (payload: {
 export const adminService = {
   getAllUserFromDB,
   deleteUserFormDB,
-  blockUserToDB,
+  toggleBlockUserToDB,
   getAllPostsFromDB,
   deletePostFromDB,
   updateVerifiedProfile,
   updateUserRoleToDB,
-  blockUserFormDB
+  getAllPaymentListFromDB
 };

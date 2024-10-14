@@ -8,7 +8,15 @@ const postValidationSchena = z.object({
     categories: z.enum(categoryList, {
       required_error: 'Categories are required',
     }),
-    premium: z.boolean().optional(),
+    premium: z.union([z.boolean(), z.string()])  
+    .optional()
+    .transform((value) => {
+   
+      if (typeof value === 'string') {
+        return value === 'true';
+      }
+      return value;
+    }),
   }),
 });
 

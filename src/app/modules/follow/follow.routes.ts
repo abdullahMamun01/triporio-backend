@@ -11,6 +11,17 @@ router.get(
   authoRization(USER_ROLE.user),
   followingController.isFollowingUser,
 );
+router.get(
+  '/:userId/followers',
+
+  followingController.getFollowers,
+);
+
+router.get(
+  '/:userId/followings',
+
+  followingController.getFollowingList,
+);
 router.post(
   '/:userId/follow',
 

@@ -43,7 +43,7 @@ const subscriptionAnalytic = async () => {
   //  { year: 2022, month: 6, name: "Jun", amount: 4800 },
   const subscriptionAnalytic = subscriptionData.map((payment) => ({
     name: monthNames[payment._id.month],
-    month: payment._id.month ,
+    month: payment._id.month,
     year: payment._id.year,
     amount: payment.totalRevenue,
   }));
@@ -94,7 +94,10 @@ const userAnalytic = async () => {
 };
 
 const recentUserList = async () => {
-  const users = await UserModel.find().sort({ createdAt: -1 }).limit(5).select('_id firstName lastName email isDeleted isVerified');
+  const users = await UserModel.find()
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .select('_id firstName lastName email isDeleted isVerified');
   return users;
 };
 
@@ -158,7 +161,6 @@ const overview = async () => {
       totalUser,
     },
     posts: {
-
       totalPosts,
     },
   };

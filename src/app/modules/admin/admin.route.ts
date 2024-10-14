@@ -18,6 +18,12 @@ router.get(
   authoRization(USER_ROLE.admin),
   adminController.getAllPosts,
 );
+router.get(
+  '/payments',
+  authoRization(USER_ROLE.admin),
+  adminController.getAllPaymentList,
+);
+
 router.patch(
   '/users/:user',
   authoRization(USER_ROLE.admin),
@@ -43,10 +49,16 @@ router.patch(
     authoRization(USER_ROLE.admin),
     adminController.blockUser,
   );
+
+  router.patch(
+    '/users/:userId/unblock',
+    authoRization(USER_ROLE.admin),
+    adminController.unBlockUser,
+  );
 router.delete(
   '/posts/:postId',
   authoRization(USER_ROLE.admin),
-  adminController.deleteUser,
+  adminController.deletePost,
 );
 
 export const adminRoutes = router;

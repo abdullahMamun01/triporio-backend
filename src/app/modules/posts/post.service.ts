@@ -1,13 +1,19 @@
 import httpStatus from 'http-status';
 import AppError from '../../error/AppError';
 import UserModel from '../user/user.model';
-import { Types } from 'mongoose';
+import {  Types } from 'mongoose';
 import { findUser } from '../user/user.utils';
 
 import TPost from './post.interface';
 import PostModel from './post.model';
 import VoteModel from '../votes/postVote.model';
 import CommentModel from '../comments/comment.model';
+
+interface Post {
+  _id: Types.ObjectId;
+  // Add other properties here that your Post model has
+}
+
 
 const allPost = async (payload: Record<string, unknown>) => {
   const page = (payload.page as number) || 1;
@@ -42,13 +48,26 @@ const allPost = async (payload: Record<string, unknown>) => {
     isActive: true,
     isDeleted: false,
   })
+
     .skip((page - 1) * limit)
     .limit(limit)
-    .populate('user', 'firstName lastName image isVerified') // Populate user details
-    .sort(mostUpvote ? { upvoteCount: -1 } : { createdAt: -1 }); // Sort by upvotes or creation date
+    .populate('user', 'firstName lastName image isVerified') 
+    .sort(mostUpvote ? { upvoteCount: -1 } : { createdAt: -1 })
+    .lean()
 
-  // 4. Fetch votes and comments for each post
-  const postIds = posts.map((post) => post._id);
+  // // 4. Fetch votes and comments for each post
+  const filteredPosts = await posts.reduce(async (accPromise, post ) => {
+    const acc = await accPromise; // Resolve the accumulator promise
+    const user = await UserModel.findById(post.user)
+  
+    if (!user?.isBlocked && !user?.isDeleted) {
+      acc.push(post); // Only include the post if the user is not blocked or deleted
+    }
+  
+    return acc;
+  }, Promise.resolve([] as Post[]));
+
+  const postIds = filteredPosts.map(post=> post._id)
 
   // Fetch votes for the posts
   const votes = await VoteModel.find({ postId: { $in: postIds } });
@@ -57,14 +76,14 @@ const allPost = async (payload: Record<string, unknown>) => {
   const comments = await CommentModel.find({ post: { $in: postIds } });
 
   // 5. Process posts to add vote and comment counts
-  const processedPosts = posts.map((post) => {
+  const processedPosts = filteredPosts.map((post) => {
     const postVotes = votes.filter((vote) => vote.postId.equals(post._id));
     const postComments = comments.filter((comment) =>
       comment.post.equals(post._id),
     );
 
     return {
-      ...post.toObject(), // Convert Mongoose document to plain object
+      ...post,
       upvoteCount: postVotes.filter((vote) => vote.voteType === 'upvote')
         .length,
       downvoteCount: postVotes.filter((vote) => vote.voteType === 'downvote')
